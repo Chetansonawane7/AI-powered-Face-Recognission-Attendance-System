@@ -1,22 +1,24 @@
 import subprocess
 import tkinter as tk
+from tkinter import *
 import cv2
 from PIL import Image, ImageTk
 import util
 import os
 import datetime
 import face_recognition
+import SpeechR
 
 class App:
     def __init__(self):
         self.main_window = tk.Tk()
-        self.main_window.geometry("1200x520+350+100")
+        self.main_window.geometry("1520x816+0+6")
         self.login_button_main_window = util.get_button(self.main_window, 'login', 'green', self.login)
-        self.login_button_main_window.place(x=750, y=300)
-        self.register_new_user_button_main_window = util.get_button(self.main_window, 'register new user', 'green', self.register_new_user, fg='black')
-        self.register_new_user_button_main_window.place(x=750, y=400)
+        self.login_button_main_window.place(x=1100, y=600)
+        self.register_new_user_button_main_window = util.get_button(self.main_window, 'register new user', 'cyan', self.register_new_user, fg='black')
+        self.register_new_user_button_main_window.place(x=1100, y=700)
         self.webcam_label = util.get_img_label(self.main_window)
-        self.webcam_label.place(x=10, y=0, width=700, height=500)
+        self.webcam_label.place(x=10, y=0, width=1000, height=800)
         self.add_webcam(self.webcam_label)
 
         self.db_dir = './db'
@@ -26,7 +28,7 @@ class App:
         self.log_path = './log.txt'
 
 
-    def add_webcam(self, label):
+   def add_webcam(self, label):
         if 'cap' not in self.__dict__:
             self.cap = cv2.VideoCapture(0)
         self._label = label
@@ -48,15 +50,17 @@ class App:
 
     def login(self):
         unknown_img_path = './.tmp.jpg'
-
         cv2.imwrite(unknown_img_path, self.most_recent_capture_arr)
         output = str(subprocess.check_output(['face_recognition', self.db_dir, unknown_img_path]))
         name = output.split(',')[1][:-5]
         if name in ['unknown_person']:
             util.msg_box('Uppss..', 'Unknown user. please register or try again')
+            SpeechR.speak("Unknown user. please register or try again")
         elif name in ['no_persons_found']:
             util.msg_box('no face', 'something went wrong, try again')
+            SpeechR.speak("no face found, try again")
         else:
+            SpeechR.speak("Your attendance filled successfully, welcome")
             util.msg_box('Your Attendance filled successfully', 'Welcome, {}'.format(name))
             with open(self.log_path, 'a') as f:
                 f.write("{},{}\n".format(name,datetime.datetime.now()))
@@ -117,7 +121,7 @@ class App:
         cv2.imwrite(os.path.join(self.db_dir, '{}.jpg'.format(name, roll, div)),self.register_new_user_capture)
 
         util.msg_box('Success','User registered successfully👍')
-
+        SpeechR.speak("User registered successfully")
         self.registr_new_user_window.destroy()
 
 if __name__ == "__main__":
